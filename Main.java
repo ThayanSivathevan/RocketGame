@@ -1,0 +1,326 @@
+package rocketGame;
+
+import java.awt.BorderLayout;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.border.Border;
+
+
+
+public class Main {
+	static JFrame f;
+	JPanel p;
+	JButton b;
+	Ship boat=new Ship();
+	int counter1,counter2;
+	boolean count1;
+	boolean shipNotGood=false,shipGood1=false;
+	final boolean screen=true;
+	final boolean notUse=true;
+	final int MaxCount=3;
+	public BufferedImage ship,background;
+
+	public static BufferedImage ast;
+	int asteroidY;
+	int asteroidChance;
+	final int asteroidOdd=1;
+	Random aster = new Random();
+	Random asterY = new Random(); 
+	public static BufferedImage las;
+	public static ArrayList<Laser> laser = new ArrayList<Laser>();
+	public static ArrayList<Asteroid> asteroid = new ArrayList<Asteroid>();
+	public static String loc="F:\\Programming\\JavaProgrammingLocation2\\School1\\src\\rocketGame\\";
+	public static void main(String[] args){
+		new Main();
+	}
+
+	public Main(){
+		f=new JFrame();
+		f.setSize(1100,800);
+		f.setLocation(40,40);
+		f.setResizable(true);
+		f.setTitle("Rocket Game");
+		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		InitImages();
+		p=makeJPanel1(); 
+		b=makeMeButtons("Start");
+		p.add(b);
+		f.add(p);
+		f.setVisible(true);
+		
+
+	}
+	private JPanel makeJPanel1() {
+		JPanel p1=new JPanel();
+		p1.setLayout(new BorderLayout ());
+		return p1;
+	}
+	public JButton makeMeButtons(String name){
+
+		JButton theBut = new JButton(name);
+
+
+		theBut.addActionListener(new ActionListener() {
+
+			
+			public void actionPerformed(ActionEvent arg0) {
+				System.out.println(false);
+				f.remove(p);
+				f.add(new DrawingBoard(),BorderLayout.CENTER);
+				f.setVisible(false);
+				f.setVisible(true);
+				f.repaint();
+				shipGood1=true;
+				ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(5);
+				executor.scheduleAtFixedRate(new RepaintBoard(), 0L, 10L, TimeUnit.MILLISECONDS);
+				shipGood1=true;
+			}
+
+
+
+			
+		});
+
+
+		return theBut; 
+
+	} 
+
+	public void InitImages(){
+		try {
+			ship = ImageIO.read(new File(loc+"ship.png"));
+		} catch (IOException e) {
+			System.out.println(false);
+
+		}
+		try {
+			las = ImageIO.read(new File(loc+"LASER.png"));
+		} catch (IOException e) {
+			System.out.println(false);
+
+		}
+		try {
+			ast = ImageIO.read(new File(loc+"ASTEROID.png"));
+		} catch (IOException e) {
+			System.out.println(false);
+
+		}
+		try {
+			background = ImageIO.read(new File(loc+"background.png"));
+		} catch (IOException e) {
+			System.out.println(false);
+
+		}
+	}
+	class RepaintBoard implements Runnable{
+		
+         
+
+		public RepaintBoard(){
+
+		}
+		public void run() {
+
+			f.repaint();
+			if(count1){
+				if(counter1==50){
+
+					counter1=0;
+					count1=false;
+				}
+				else counter1++;
+			}
+			asteroidChance=aster.nextInt(19)+1;
+			if(asteroidChance==asteroidOdd){
+				asteroidY=50*(asterY.nextInt(15)+1);
+				asteroid.add(new Asteroid(1110,asteroidY,screen,false,false));
+			}
+			
+			if(shipNotGood){
+				if(counter2!=MaxCount){
+				counter2=counter2+1;
+				}
+				else if(counter2==MaxCount){
+					shipGood1=false;
+				}
+				
+			}
+
+
+
+		}
+
+
+	}
+
+	class DrawingBoard extends JComponent{
+		int x,y;
+		 Font font = new Font("Courier", Font.BOLD,100);
+		public DrawingBoard()
+		{
+
+			this.addMouseListener(new MouseAdapter(){
+
+
+				public void mousePressed(MouseEvent e)
+				{
+
+					x=e.getX();
+					y=e.getY();
+					boat.x=x-25;
+					boat.y=y-25;
+					if(count1){
+
+					}
+					else{
+						laser.add(new Laser(boat.x+25,boat.y+25,screen,notUse));
+						count1=true;
+
+					}
+
+
+				}
+
+
+
+			});
+			this.addMouseMotionListener(new MouseAdapter(){
+				public void mouseMoved(MouseEvent e)
+				{
+					x=e.getX();
+					y=e.getY();
+					boat.x=x-25;
+					boat.y=y-25;
+
+				}
+
+				public void mouseDragged(MouseEvent e)
+				{
+
+					x=e.getX();
+					y=e.getY();
+					boat.x=x-25;
+					boat.y=y-25;
+
+					if(count1){
+
+					}
+					else{
+						laser.add(new Laser(boat.x+25,boat.y+25,screen,notUse));
+						count1=true;
+
+					}
+
+
+				}
+			});
+
+		}
+
+		public void paint(Graphics g){
+			if(shipGood1){
+				g.drawImage(background,0, 0, null);
+				g.drawImage(ship,boat.x,boat.y, null);
+				for(Laser laser : Main.laser){
+					laser.move();
+					laser.inScreen=laser.getScreen();
+					laser.notused=laser.getUsed();
+					if(laser.inScreen&&laser.notused){
+						g.drawImage(laser.getLas(), laser.getX(), laser.getY(), null);
+					}
+				}
+				for(Asteroid Asteroid : Main.asteroid){
+					Asteroid.move();
+					Asteroid.inScreen=Asteroid.getScreen();
+					Asteroid.destroyed=Asteroid.getDestroy();
+					if(Asteroid.inScreen&&Asteroid.destroyed!=true){
+						g.drawImage(ast, Asteroid.getX(), Asteroid.getY(), null);
+					}
+				}
+				destroyAsteroids();
+				destroyShip();
+			}
+			else{
+				g.setFont(font);
+				g.drawString("You lose", 300,800/2);
+			}
+		}
+
+
+
+		public void destroyAsteroids(){
+			for(Laser laser : Main.laser){
+				if(laser.inScreen&&laser.notused){
+					for(Asteroid Asteroid : Main.asteroid){
+						if(Asteroid.inScreen&&Asteroid.destroyed!=true){
+							if((laser.getX()+laser.getWidth()>=Asteroid.getHitboxX())&&(laser.getY()+laser.getLength()>=Asteroid.getHitboxY())&&(laser.getX()<=Asteroid.getHitboxX())&&(laser.getY()<=Asteroid.getHitboxY())){
+								Asteroid.destroyed=true;
+								laser.notused=false;
+							}
+							else if((laser.getX()+laser.getWidth()>=Asteroid.getHitboxX())&&(laser.getY()+laser.getLength()>=Asteroid.getHitboxY())&&(laser.getX()<=Asteroid.getHitboxX())&&(laser.getY()<=Asteroid.getHitboxY()+Asteroid.height)){
+								Asteroid.destroyed=true;
+								laser.notused=false;
+							}
+							else if((laser.getX()+laser.getWidth()>=Asteroid.getHitboxX())&&(laser.getY()+laser.getLength()>=Asteroid.getHitboxY())&&(laser.getX()<=Asteroid.getHitboxX()+Asteroid.width)&&(laser.getY()<=Asteroid.getHitboxY())){
+								Asteroid.destroyed=true;
+								laser.notused=false;
+							}
+							else if((laser.getX()+laser.getWidth()>=Asteroid.getHitboxX())&&(laser.getY()+laser.getLength()>=Asteroid.getHitboxY())&&(laser.getX()<=Asteroid.getHitboxX()+Asteroid.width)&&(laser.getY()<=Asteroid.getHitboxY()+Asteroid.height)){
+								Asteroid.destroyed=true;
+								laser.notused=false;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		public void destroyShip(){
+			for(Asteroid Asteroid : Main.asteroid){
+				if(Asteroid.inScreen&&Asteroid.destroyed!=true){
+					if((Asteroid.getHitboxX()+Asteroid.width>=boat.gethitbox1X())&&(Asteroid.getHitboxY()+Asteroid.height>=boat.gethitbox1Y())&&(Asteroid.getHitboxX()<=boat.gethitbox1X())&&(Asteroid.getHitboxY()<=boat.gethitbox1Y())){
+						shipNotGood=true;
+					}
+					else if((Asteroid.getHitboxX()+Asteroid.width>=boat.gethitbox1X())&&(Asteroid.getHitboxY()+Asteroid.height>=boat.gethitbox1Y())&&(Asteroid.getHitboxX()<=boat.gethitbox1X()+boat.width1)&&(Asteroid.getHitboxY()<=boat.gethitbox1Y())){
+						shipNotGood=true;
+					}
+					else if((Asteroid.getHitboxX()+Asteroid.width>=boat.gethitbox1X())&&(Asteroid.getHitboxY()+Asteroid.height>=boat.gethitbox1Y())&&(Asteroid.getHitboxX()<=boat.gethitbox1X())&&(Asteroid.getHitboxY()<=boat.gethitbox1Y()+boat.height1)){
+						shipNotGood=true;
+					}
+					else if((Asteroid.getHitboxX()+Asteroid.width>=boat.gethitbox1X())&&(Asteroid.getHitboxY()+Asteroid.height>=boat.gethitbox1Y())&&(Asteroid.getHitboxX()<=boat.gethitbox1X()+boat.width1)&&(Asteroid.getHitboxY()<=boat.gethitbox1Y()+boat.height1)){
+						shipNotGood=true;
+					}
+					else if((Asteroid.getHitboxX()+Asteroid.width>=boat.gethitbox2X())&&(Asteroid.getHitboxY()+Asteroid.height>=boat.gethitbox2Y())&&(Asteroid.getHitboxX()<=boat.gethitbox2X())&&(Asteroid.getHitboxY()<=boat.gethitbox2Y())){
+						shipNotGood=true;
+					}
+					else if((Asteroid.getHitboxX()+Asteroid.width>=boat.gethitbox2X())&&(Asteroid.getHitboxY()+Asteroid.height>=boat.gethitbox2Y())&&(Asteroid.getHitboxX()<=boat.gethitbox2X()+boat.width2)&&(Asteroid.getHitboxY()<=boat.gethitbox2Y())){
+						shipNotGood=true;
+					}
+					else if((Asteroid.getHitboxX()+Asteroid.width>=boat.gethitbox2X())&&(Asteroid.getHitboxY()+Asteroid.height>=boat.gethitbox2Y())&&(Asteroid.getHitboxX()<=boat.gethitbox2X())&&(Asteroid.getHitboxY()<=boat.gethitbox2Y()+boat.height2)){
+						shipNotGood=true;
+					}
+					else if((Asteroid.getHitboxX()+Asteroid.width>=boat.gethitbox2X())&&(Asteroid.getHitboxY()+Asteroid.height>=boat.gethitbox2Y())&&(Asteroid.getHitboxX()<=boat.gethitbox2X()+boat.width2)&&(Asteroid.getHitboxY()<=boat.gethitbox2Y()+boat.height1)){
+						shipNotGood=true;
+					}
+				}
+			}
+		}
+
+
+	}
+}
